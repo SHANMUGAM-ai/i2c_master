@@ -1,0 +1,20 @@
+// Code your testbench here
+// or browse Examples
+`timescale 1ns/1ps
+module tb_i2c_master;
+reg clk = 0, rst = 0, start = 0;
+reg [6:0] address = 7'b1010000;
+reg [7:0] data = 8'h5A;
+wire scl, sda, done;
+
+i2c_master uut (.clk(clk), .rst(rst), .start(start), .address(address), .data(data), .scl(scl), .sda(sda), .done(done));
+
+always #5 clk = ~clk;
+
+initial begin
+    $dumpfile("i2c.vcd"); $dumpvars(0, tb_i2c_master);
+    rst = 1; #10; rst = 0;
+    #20 start = 1; #10 start = 0;
+    #500 $finish;
+end
+endmodule
