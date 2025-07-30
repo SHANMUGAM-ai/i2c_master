@@ -1,0 +1,51 @@
+// Code your design here
+module i2c_master(
+    input clk,
+    input rst,
+    input start,
+    input [6:0] address,
+    input [7:0] data,
+    output reg scl,
+    output reg sda,
+    output reg done
+);
+    reg [4:0] bit_cnt;
+    reg [15:0] shift;
+    reg [2:0] state;
+    parameter IDLE=0, START_BIT=1, TRANSFER=2, STOP_BIT=3;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            scl <= 1; sda <= 1; done <= 0; bit_cnt <= 0; state <= IDLE;
+        end else begin
+            case (state)
+                IDLE: begin
+                    scl <= 1; sda <= 1; done <= 0;
+                    if (start) begin
+                        shift <= {address, 1'b0, data};
+                        bit_cnt <= 0;
+                        state <= START_BIT;
+                    end
+                end
+                START_BIT: begin
+                    sda <= 0;
+                    scl <= 1;
+                    state <= TRANSFER;
+                end
+                TRANSFER: begin
+                    scl <= 0;
+                    sda <= shift[15 - bit_cnt];
+                    scl <= 1;
+                    bit_cnt <= bit_cnt + 1;
+                    if (bit_cnt == 15) state <= STOP_BIT;
+                end
+                STOP_BIT: begin
+                    scl <= 1;
+                    sda <= 1;
+                    done <= 1;
+                    state <= IDLE;
+                end
+            endcase
+        end
+    end
+endmodule
